@@ -6,11 +6,15 @@
 
 > Use the arrow keys to move around the picture
 
-> `p` to zoom in
+> `scroll` to zoom
 
-> `o` to zoom out
+> `mouse` to navigate
 
 > `r` to reset the clock
+
+> `1` to toggle showing z^2+c
+
+> `p` to pause the current power of z
 
 ## Mouse
 
