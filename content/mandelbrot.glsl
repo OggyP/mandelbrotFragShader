@@ -2,6 +2,7 @@
 
 uniform vec2 centerOfScreen;
 uniform float distancePerPixel;
+uniform float power;
 uniform vec2 resolution;
 
 #define cx_add(a, b) vec2(a.x + b.x, a.y + b.y)
@@ -23,9 +24,9 @@ vec2 cx_pow(vec2 a, float n) {
 
 int iterationsToPastTwo(vec2 c) {
 	vec2 z = c;
-	for(int i = 0; i < 100; i++) {
+	for(int i = 0; i < 300; i++) {
 
-		z = cx_add(cx_pow(z, 2), c);
+		z = cx_add(cx_pow(z, power), c);
 		if(pow(z.x, 2) + pow(z.y, 2) > 4.0)
 			return i;
 	}

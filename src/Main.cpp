@@ -3,20 +3,20 @@
 
 #define maxIterations 1000
 
-const int screenSize[2] = { 1500, 1000 };
+uint screenSize[2] = { 1500, 1000 };
 
 double centerOfScreen[] = { -0.5, 0 };
 double distancePerPixel = 0.002;
 
 std::array<std::complex<long double>, maxIterations>
-iterate(std::complex<long double> c);
-std::array<std::complex<long double>, maxIterations> iterate(std::complex<long double> c)
+iterate(std::complex<long double> c, float power);
+std::array<std::complex<long double>, maxIterations> iterate(std::complex<long double> c, float power)
 {
 	std::complex<long double> z(0, 0);
 	std::array<std::complex<long double>, maxIterations> iterations;
 	for (size_t i = 0; i < maxIterations; i++)
 	{
-		z = pow(z, 2) + c; // z = z^2 + c
+		z = pow(z, power) + c; // z = z^2 + c
 		iterations[i] = z;
 	}
 	return iterations;
@@ -61,8 +61,17 @@ int main()
 	sf::RenderWindow window;
 	// in Windows at least, this must be called before creating the window
 	float screenScalingFactor = platform.getScreenScalingFactor(window.getSystemHandle());
-	// Use the screenScalingFactor
+// Use the screenScalingFactor
+#if defined(__linux__)
 	window.create(sf::VideoMode(screenSize[0] * screenScalingFactor, screenSize[1] * screenScalingFactor), "Mandelbrot Fractal!");
+	window.create(sf::VideoMode(1680, 1050), "Mandelbrot Fractal!", sf::Style::Resize | sf::Style::Fullscreen | sf::Style::Close);
+#else
+	window.create(sf::VideoMode(0, 0), "Mandelbrot Fractal!", sf::Style::Resize | sf::Style::Close);
+	platform.toggleFullscreen(window.getSystemHandle(), sf::Style::Fullscreen, false, sf::Vector2u(sf::VideoMode::getDesktopMode().width, sf::VideoMode::getDesktopMode().height));
+#endif
+	window.create(sf::VideoMode(window.getSize().x, window.getSize().y), "Mandelbrot Fractal!");
+	screenSize[0] = window.getSize().x;
+	screenSize[1] = window.getSize().y;
 	platform.setIcon(window.getSystemHandle());
 
 	background.create(screenSize[0] * screenScalingFactor, screenSize[1] * screenScalingFactor);
@@ -99,16 +108,20 @@ int main()
 	bool update = true;
 	bool keyPressed = false;
 
+	sf::Clock clock;
+
 	sf::Event event;
 
 	while (window.isOpen())
 	{
+		const float power = pow(2, 0.01 * (clock.getElapsedTime().asSeconds() - 20));
 		while (window.pollEvent(event))
 		{
 			if (event.type == sf::Event::Closed)
 				window.close();
 		}
 
+		update = true;
 		if (update)
 		{
 			update = false;
@@ -116,6 +129,7 @@ int main()
 			shader.setUniform("centerOfScreen", sf::Glsl::Vec2(centerOfScreen[0], centerOfScreen[1]));
 			shader.setUniform("resolution", sf::Glsl::Vec2(screenSize[0], screenSize[1]));
 			shader.setUniform("distancePerPixel", (float)distancePerPixel);
+			shader.setUniform("power", power);
 			background.draw(backgroundRect, &shader);
 			// for (u_int x = 0; x < (u_int)screenSize[0]; x++)
 			// {
@@ -161,7 +175,7 @@ int main()
 		text.setString(std::to_string(mouseComplexCoords.imag()).append(" imag"));
 		window.draw(text);
 
-		const auto fullIteration = iterate(mouseComplexCoords);
+		const auto fullIteration = iterate(mouseComplexCoords, power);
 		for (size_t i = 0; i < fullIteration.size(); i++)
 		{
 			const auto iteration = fullIteration[i];
@@ -172,7 +186,9 @@ int main()
 
 		window.display();
 
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::P))
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::R))
+			clock.restart();
+		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::P))
 		{
 			if (!keyPressed)
 			{

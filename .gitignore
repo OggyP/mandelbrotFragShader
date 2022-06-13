@@ -11,3 +11,7 @@ Thumbs.db
 
 # Project specific
 #
+.vscode/configurationCache.log
+.gitignore
+.vscode/targets.log
+.vscode/dryrun.log
